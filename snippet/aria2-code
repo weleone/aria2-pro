@@ -1,0 +1,49 @@
+#
+# Copyright (c) 2020 P3TERX <https://p3terx.com>
+#
+# This is free software, licensed under the GNU General Public License v3.
+# See /LICENSE for more information.
+#
+# https://github.com/P3TERX/Aria2-Pro-Core
+# File name: snippet/aria2-code
+#
+# MODIFIED for Aria2 1.37.0 build (2026-10-02):
+# - 源码锁定为官方 release-1.37.0 tarball，不再跟踪 git master
+# - 0004 patch 已废弃（1.37.0 上游原生支持 --no-want-digest-header），见 PATCH-NOTES.md
+#
+
+ARIA2_VERSION='1.37.0'
+ARIA2_RELEASE_URL="https://github.com/aria2/aria2/releases/download/release-${ARIA2_VERSION}/aria2-${ARIA2_VERSION}.tar.xz"
+
+ARIA2_GIT_CODE() {
+    if [[ -d $ARIA2_CODE_DIR && -d $ARIA2_CODE_DIR/.git ]]; then
+        cd $ARIA2_CODE_DIR
+        git checkout master || git checkout HEAD
+        git reset --hard origin || git reset --hard
+        git pull
+    else
+        rm -rf $ARIA2_CODE_DIR
+        git clone https://github.com/aria2/aria2 $ARIA2_CODE_DIR
+        cd $ARIA2_CODE_DIR
+    fi
+    autoreconf -fi || autoreconf -fiv
+}
+
+ARIA2_RELEASE_CODE() {
+    echo "Downloading Aria2 ${ARIA2_VERSION} source tarball ..."
+    rm -rf $ARIA2_CODE_DIR
+    mkdir -p $ARIA2_CODE_DIR && cd $ARIA2_CODE_DIR
+    curl --fail -sSL -o /tmp/dl.pkg --retry 5 --retry-all-errors --retry-delay 3 "$ARIA2_RELEASE_URL" && tar Jxvf /tmp/dl.pkg --strip-components=1 && rm -f /tmp/dl.pkg
+    # release tarball 自带 configure，无需 autoreconf
+}
+
+ARIA2_PATCH() {
+    echo "Applying P3TERX patches ..."
+    git apply -v $SCRIPT_DIR/patch/*.patch
+}
+
+ARIA2_CODE_GET() {
+    ARIA2_RELEASE_CODE
+    #ARIA2_GIT_CODE
+    ARIA2_PATCH
+}

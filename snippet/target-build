@@ -1,0 +1,119 @@
+#
+# Copyright (c) 2020 P3TERX <https://p3terx.com>
+#
+# This is free software, licensed under the GNU General Public License v3.
+# See /LICENSE for more information.
+#
+# https://github.com/P3TERX/Aria2-Pro-Core
+# File name: snippet/target-build
+#
+
+ZLIB_BUILD() {
+    mkdir -p $BUILD_DIR/zlib && cd $BUILD_DIR/zlib
+    curl --fail -Ls --retry 5 --retry-all-errors --retry-delay 3 -o /tmp/dl.pkg "$ZLIB" && tar zxvf /tmp/dl.pkg --strip-components=1 && rm -f /tmp/dl.pkg
+    ./configure \
+        --prefix=$PREFIX \
+        --static
+    make -j$(nproc)
+    make install
+}
+
+EXPAT_BUILD() {
+    mkdir -p $BUILD_DIR/expat && cd $BUILD_DIR/expat
+    curl --fail -Ls --retry 5 --retry-all-errors --retry-delay 3 -o /tmp/dl.pkg "$EXPAT" && tar jxvf /tmp/dl.pkg --strip-components=1 && rm -f /tmp/dl.pkg
+    ./configure \
+        --prefix=$PREFIX \
+        --enable-static \
+        --disable-shared \
+        --without-examples \
+        --without-tests \
+        --without-docbook
+    make -j$(nproc)
+    make install
+}
+
+C_ARES_BUILD() {
+    mkdir -p $BUILD_DIR/c-ares && cd $BUILD_DIR/c-ares
+    curl --fail -Ls --retry 5 --retry-all-errors --retry-delay 3 -o /tmp/dl.pkg "$C_ARES" && tar zxvf /tmp/dl.pkg --strip-components=1 && rm -f /tmp/dl.pkg
+    ./configure \
+        --prefix=$PREFIX \
+        --enable-static \
+        --disable-shared \
+        --disable-tests
+    make -j$(nproc)
+    make install
+}
+
+OPENSSL_BUILD() {
+    mkdir -p $BUILD_DIR/openssl && cd $BUILD_DIR/openssl
+    curl --fail -Ls --retry 5 --retry-all-errors --retry-delay 3 -o /tmp/dl.pkg "$OPENSSL" && tar zxvf /tmp/dl.pkg --strip-components=1 && rm -f /tmp/dl.pkg
+    ./Configure \
+        --prefix=$PREFIX \
+        --libdir=lib \
+        $OPENSSL_ARCH \
+        no-shared \
+        no-module \
+        no-tests
+    make -j$(nproc)
+    make install_sw
+}
+
+SQLITE3_BUILD() {
+    mkdir -p $BUILD_DIR/sqlite3 && cd $BUILD_DIR/sqlite3
+    curl --fail -Ls --retry 5 --retry-all-errors --retry-delay 3 -o /tmp/dl.pkg "$SQLITE3" && tar zxvf /tmp/dl.pkg --strip-components=1 && rm -f /tmp/dl.pkg
+    ./configure \
+        --prefix=$PREFIX \
+        --enable-static \
+        --disable-shared \
+        --disable-load-extension
+    make -j$(nproc)
+    make install
+}
+
+LIBSSH2_BUILD() {
+    mkdir -p $BUILD_DIR/libssh2 && cd $BUILD_DIR/libssh2
+    curl --fail -Ls --retry 5 --retry-all-errors --retry-delay 3 -o /tmp/dl.pkg "$LIBSSH2" && tar zxvf /tmp/dl.pkg --strip-components=1 && rm -f /tmp/dl.pkg
+    ./configure \
+        --prefix=$PREFIX \
+        --enable-static \
+        --disable-shared \
+        --disable-examples-build
+    make -j$(nproc)
+    make install
+}
+
+JEMALLOC_BUILD() {
+    mkdir -p $BUILD_DIR/jemalloc && cd $BUILD_DIR/jemalloc
+    curl --fail -Ls --retry 5 --retry-all-errors --retry-delay 3 -o /tmp/dl.pkg "$JEMALLOC" && tar jxvf /tmp/dl.pkg --strip-components=1 && rm -f /tmp/dl.pkg
+    ./configure \
+        --prefix=$PREFIX \
+        --enable-static \
+        --disable-shared \
+        --disable-stats \
+        --enable-prof
+    make -j$(nproc)
+    make install
+}
+
+ARIA2_BUILD() {
+    ARIA2_CODE_GET
+    # OpenSSL 已用 no-module 把 legacy provider 编进 libcrypto.a，无需外部 .so
+    ./configure \
+        --prefix=${ARIA2_PREFIX:-'/usr/loacl'} \
+        --with-libz \
+        --with-libcares \
+        --with-libexpat \
+        --without-libxml2 \
+        --without-libgcrypt \
+        --with-openssl \
+        --without-libnettle \
+        --without-gnutls \
+        --without-libgmp \
+        --with-libssh2 \
+        --with-sqlite3 \
+        --without-jemalloc \
+        --with-ca-bundle='/etc/ssl/certs/ca-certificates.crt' \
+        ARIA2_STATIC=yes \
+        --disable-shared
+    make -j$(nproc)
+}
